@@ -123,18 +123,13 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (320,512)), cmap=plt.get_cmap('gray'))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (320,512)), cmap=plt.get_cmap('gray'))
-            plt.savefig("data/resnet_ex_eval{}.png".format(epoch+1))
+            plt.savefig("data/resnet_ex2_eval{}.png".format(epoch+1))
 
             plt.figure(figsize=(6,6))
             plt.scatter(torch2np(encoded[:,0]),torch2np(encoded[:,1]), alpha=0.5)
-            plt.savefig("data/resnet_ex_encoded{}.png".format(epoch+1))
+            plt.savefig("data/resnet_ex2_encoded{}.png".format(epoch+1))
 
-            plt.figure(figsize=(6,6))
-            plt.xlim(-10, 10)
-            plt.ylim(-10, 10)
-            plt.scatter(torch2np(encoded[:,0]),torch2np(encoded[:,1]), alpha=0.5)
-            plt.savefig("data/resnet_ex_fix_encoded{}.png".format(epoch+1))
-            torch.save(ae.state_dict(), 'weights/resnet_ex_{}steps.pth'.format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/resnet_ex_encoder{}steps.pth'.format(epoch+1))
     # m.end_run()
     print("Model has finished training.\n")
     scheduler.step()
