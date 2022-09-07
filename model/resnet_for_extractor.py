@@ -70,7 +70,7 @@ class Encoder(nn.Module):
         rb6 = self.rb6(rb5)
         flat_rb6 = self.flatten(rb6)
         lin1 = self.relu(self.lin1(flat_rb6))
-        lin2 = self.lin2(lin1)
+        lin2 = self.relu(self.lin2(lin1))
         return lin2
 
 class Decoder(nn.Module):
@@ -86,7 +86,7 @@ class Decoder(nn.Module):
         self.rb4 = ResBlock(32, 32, 2, 2, 0, 'decode') # 32 16 16
         self.rb5 = ResBlock(32, 16, 3, 1, 1, 'decode') # 16 16 16
         self.rb6 = ResBlock(16, 16, 2, 2, 0, 'decode') # 16 32 32
-        self.de_lin1 = nn.Linear(4096, 64*20*32, )
+        self.de_lin1 = nn.Linear(4096, 64*20*32)
         self.de_lin2 = nn.Linear(128, 4096)
         self.out_conv = nn.ConvTranspose2d(16, 1, 3, 1, 1) # 3 32 32
         self.tanh = nn.Tanh()
@@ -94,7 +94,7 @@ class Decoder(nn.Module):
 
     def forward(self, inputs):
         delin2 = self.relu(self.de_lin2(inputs))
-        delin1 = self.de_lin1(delin2)
+        delin1 = self.relu(self.de_lin1(delin2))
         inputs = delin1.view(-1, 64, 20, 32)
         rb1 = self.rb1(inputs)
         rb2 = self.rb2(rb1)
