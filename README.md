@@ -1,2 +1,2 @@
-# autoendcoder
-Autoencoders
+# ResNet
+Implementation: ResNet-based Autoencoder
