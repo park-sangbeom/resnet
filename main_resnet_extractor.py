@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.autograd import Variable
 from torch.utils.data import DataLoader
 torch.set_printoptions(linewidth=120)
 torch.set_grad_enabled(True)
@@ -21,21 +22,6 @@ from model.resnet_for_extractor import Autoencoder
 print(torch.__version__)
 print(torchvision.__version__)
 
-def torch2np(x_torch):
-    if x_torch is None:
-        x_np = None
-    else:
-        x_np = x_torch.detach().cpu().numpy()
-    return x_np
-
-def np2torch(x_np,device='cpu'):
-    if x_np is None:
-        x_torch = None
-    else:
-        x_torch = torch.tensor(x_np,dtype=torch.float32,device=device)
-    return x_torch
-
-
 param_names = ('init_lr', 'batch_size', 'weight_decay')
 parameters = OrderedDict(
     run = [0.05, 64, 0.001],
@@ -46,12 +32,9 @@ print("Device: {}".format(device))
 m = RunManager()
 num_epochs = 300
 
-root_path = root_path = "/home/sangbeom/unity_dataset/depth/"
-tf=transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.ToTensor()
-])
-depth_dataset = DepthDatasetLoader(root_path=root_path, transform=tf)
+root_path = "/home/sangbeom/resnet/data/depth1014/"
+
+depth_dataset = DepthDatasetLoader(root_path=root_path)
 train_set, val_set = train_val_split(depth_dataset, 0.1)
 
 for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
@@ -80,14 +63,14 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
         
         # Train the model
         for i, batch in enumerate(train_loader):
-            images = batch[:,:,8:328,6:-6]
-            images = torch.Tensor(images).to(device)
+            train_images = batch.reshape(-1, 1, 96, 192)
+            train_images =  Variable(train_images.float().to(device))
             # Zero all gradients
             optimizer.zero_grad()
             
             # Calculating the loss
-            preds,_ = ae(images)
-            loss = F.mse_loss(preds, images)
+            preds,_ = ae(train_images)
+            loss = F.mse_loss(preds, train_images)
             # Backpropagate
             loss.backward()
 
@@ -97,8 +80,9 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             if i % 10 == 0:
                 with torch.no_grad():
                     val_images  = next(iter(val_loader))
-                    val_images = torch.Tensor(val_images[:,:,8:328,6:-6]).to(device)
-                    val_preds, _ = ae(val_images)
+                    val_images = val_images.reshape(-1, 1, 96, 192)
+                    val_images = Variable(val_images.float().to(device))
+                    val_preds,_ = ae(val_images)
                     val_loss = F.mse_loss(val_preds, val_images)
                 print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
                                                                                i*hparams.batch_size,
@@ -110,7 +94,8 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
         if (epoch+1)%1==0 or (epoch+1)==num_epochs:
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
-                val_images = torch.Tensor(val_images[:,:,8:328,6:-6]).to(device)
+                val_images = val_images.reshape(-1, 1, 96, 192)
+                val_images = Variable(val_images.float().to(device))
                 val_preds, encoded = ae(val_images)
                 val_loss = F.mse_loss(val_preds, val_images)
             # print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
@@ -121,15 +106,12 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             val_images = val_images.detach().cpu().numpy()
             val_preds = val_preds.detach().cpu().numpy()
             for i in range(5):
-                axs[0][i].matshow(np.reshape(val_images[i, :], (320,512)), cmap=plt.get_cmap('gray'))
-                axs[1][i].matshow(np.reshape(val_preds[i, :], (320,512)), cmap=plt.get_cmap('gray'))
-            plt.savefig("data/resnet_ex2_eval{}.png".format(epoch+1))
+                axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)), cmap=plt.get_cmap('gray'))
+                axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)), cmap=plt.get_cmap('gray'))
+            plt.savefig("data/resnet1014_eval{}.png".format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/resnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/resnet_decoder{}steps.pth'.format(epoch+1))
 
-            plt.figure(figsize=(6,6))
-            plt.scatter(torch2np(encoded[:,0]),torch2np(encoded[:,1]), alpha=0.5)
-            plt.savefig("data/resnet_ex2_encoded{}.png".format(epoch+1))
-
-            torch.save(ae.encoder.state_dict(), 'weights/resnet_ex_encoder{}steps.pth'.format(epoch+1))
     # m.end_run()
     print("Model has finished training.\n")
     scheduler.step()

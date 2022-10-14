@@ -1,8 +1,6 @@
 # Imports
 from collections import OrderedDict
-
 import numpy as np
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -56,8 +54,8 @@ class Encoder(nn.Module):
         self.rb5 = ResBlock(48, 48, 3, 2, 1, 'encode') # 48 4 4
         self.rb6 = ResBlock(48, 64, 3, 2, 1, 'encode') # 64 2 2
         self.flatten = nn.Flatten()
-        self.lin1 = nn.Linear(64*20*32, 4096)
-        self.lin2 = nn.Linear(4096, 128)
+        self.lin1 = nn.Linear(64*6*12, 1024)
+        self.lin2 = nn.Linear(1024, 128)
         self.relu = nn.ReLU()
     
     def forward(self, inputs):
@@ -86,8 +84,8 @@ class Decoder(nn.Module):
         self.rb4 = ResBlock(32, 32, 2, 2, 0, 'decode') # 32 16 16
         self.rb5 = ResBlock(32, 16, 3, 1, 1, 'decode') # 16 16 16
         self.rb6 = ResBlock(16, 16, 2, 2, 0, 'decode') # 16 32 32
-        self.de_lin1 = nn.Linear(4096, 64*20*32)
-        self.de_lin2 = nn.Linear(128, 4096)
+        self.de_lin1 = nn.Linear(1024, 64*4608)
+        self.de_lin2 = nn.Linear(128, 1024)
         self.out_conv = nn.ConvTranspose2d(16, 1, 3, 1, 1) # 3 32 32
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
@@ -95,7 +93,7 @@ class Decoder(nn.Module):
     def forward(self, inputs):
         delin2 = self.relu(self.de_lin2(inputs))
         delin1 = self.relu(self.de_lin1(delin2))
-        inputs = delin1.view(-1, 64, 20, 32)
+        inputs = delin1.view(-1, 64, 6, 12)
         rb1 = self.rb1(inputs)
         rb2 = self.rb2(rb1)
         rb3 = self.rb3(rb2)
