@@ -1,7 +1,7 @@
 demo/data/*
 wandb/*
 data/*
-#weights/*
+weights/*
 # Custom
 .vscode/
 log/

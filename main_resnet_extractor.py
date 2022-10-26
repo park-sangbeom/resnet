@@ -24,7 +24,7 @@ print(torchvision.__version__)
 
 param_names = ('init_lr', 'batch_size', 'weight_decay')
 parameters = OrderedDict(
-    run = [0.05, 64, 0.001],
+    run = [0.05, 16, 0.001],
 )
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Device: {}".format(device))
