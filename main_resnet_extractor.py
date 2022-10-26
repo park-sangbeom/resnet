@@ -24,13 +24,13 @@ print(torchvision.__version__)
 
 param_names = ('init_lr', 'batch_size', 'weight_decay')
 parameters = OrderedDict(
-    run = [0.05, 16, 0.001],
+    run = [0.05, 128, 0.001],
 )
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Device: {}".format(device))
 
 m = RunManager()
-num_epochs = 300
+num_epochs = 1000
 
 root_path = "/home/sangbeom/resnet/data/depth1014/"
 
@@ -60,7 +60,6 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
     # Start training loop
     for epoch in range(num_epochs):
         # m.begin_epoch()
-        
         # Train the model
         for i, batch in enumerate(train_loader):
             train_images = batch.reshape(-1, 1, 96, 192)
@@ -77,7 +76,7 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             # Update the weights
             optimizer.step()
             
-            if i % 10 == 0:
+            if i % 100 == 0:
                 with torch.no_grad():
                     val_images  = next(iter(val_loader))
                     val_images = val_images.reshape(-1, 1, 96, 192)
@@ -91,7 +90,7 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
                 
                 val_images = val_images.detach().cpu().numpy()
                 val_preds = val_preds.detach().cpu().numpy()
-        if (epoch+1)%1==0 or (epoch+1)==num_epochs:
+        if (epoch+1)%100==0 or (epoch+1)==num_epochs:
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
                 val_images = val_images.reshape(-1, 1, 96, 192)
@@ -106,11 +105,11 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             val_images = val_images.detach().cpu().numpy()
             val_preds = val_preds.detach().cpu().numpy()
             for i in range(5):
-                axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)), cmap=plt.get_cmap('gray'))
-                axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)), cmap=plt.get_cmap('gray'))
-            plt.savefig("data/resnet1014_eval{}.png".format(epoch+1))
-            torch.save(ae.encoder.state_dict(), 'weights/resnet_encoder{}steps.pth'.format(epoch+1))
-            torch.save(ae.decoder.state_dict(), 'weights/resnet_decoder{}steps.pth'.format(epoch+1))
+                axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
+                axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
+            plt.savefig("data/resnet/resnet1027_eval{}.png".format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/resnet1027/resnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/resnet1027/resnet_decoder{}steps.pth'.format(epoch+1))
 
     # m.end_run()
     print("Model has finished training.\n")
