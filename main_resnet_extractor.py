@@ -107,9 +107,9 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
-            plt.savefig("data/resnet/resnet1027_eval{}.png".format(epoch+1))
-            torch.save(ae.encoder.state_dict(), 'weights/resnet1027/resnet_encoder{}steps.pth'.format(epoch+1))
-            torch.save(ae.decoder.state_dict(), 'weights/resnet1027/resnet_decoder{}steps.pth'.format(epoch+1))
+            plt.savefig("data/resnet/resnet1028_eval{}.png".format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/resnet1028/resnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/resnet1028/resnet_decoder{}steps.pth'.format(epoch+1))
 
     # m.end_run()
     print("Model has finished training.\n")
