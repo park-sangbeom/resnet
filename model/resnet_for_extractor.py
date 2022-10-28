@@ -53,7 +53,7 @@ class Encoder(nn.Module):
         self.rb3 = ResBlock(32, 48, 3, 2, 1, 'encode') 
         self.flatten = nn.Flatten()
         self.lin1 = nn.Linear(48*12*24, 1024)
-        self.lin2 = nn.Linear(1024, 20)
+        self.lin2 = nn.Linear(1024, 16)
         self.relu = nn.ReLU()
 
     def forward(self, inputs):
@@ -78,7 +78,7 @@ class Decoder(nn.Module):
         self.rb3 = ResBlock(16, 16, 2, 2, 1, 'decode') # 16 32 32
 
         self.de_lin1 = nn.Linear(1024, 48*12*24)
-        self.de_lin2 = nn.Linear(20, 1024)
+        self.de_lin2 = nn.Linear(16, 1024)
         self.out_conv = nn.ConvTranspose2d(16, 1, 3, 1, 0) # 3 32 32
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
