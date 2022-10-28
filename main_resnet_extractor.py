@@ -30,7 +30,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Device: {}".format(device))
 
 m = RunManager()
-num_epochs = 2000
+num_epochs = 200
 
 root_path = "/home/sangbeom/resnet/data/depth1014/"
 
@@ -90,7 +90,7 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
                 
                 val_images = val_images.detach().cpu().numpy()
                 val_preds = val_preds.detach().cpu().numpy()
-        if (epoch+1)%100==0 or (epoch+1)==num_epochs:
+        if (epoch+1)%10==0 or (epoch+1)==1 or (epoch+1)==5 or (epoch+1)==num_epochs:
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
                 val_images = val_images.reshape(-1, 1, 96, 192)
