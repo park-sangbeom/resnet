@@ -43,28 +43,52 @@ class ConvNetEncoder(nn.Module):
             nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 16 * 48 * 96
         self.layer2  = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=3, padding=1), # 16* 48 * 96 -> 32 * 48 * 96
-            nn.BatchNorm2d(32), #  32 * 48 * 96
+            nn.Conv2d(16, 16, kernel_size=3, padding=1), # 16* 48 * 96 -> 32 * 48 * 96
+            nn.BatchNorm2d(16), #  32 * 48 * 96
             nn.ReLU(), #  32 * 48 * 96
-            nn.MaxPool2d(2),
+            # nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 32 * 24 * 48
         self.layer3  = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=3, padding=1), # 32 * 24 * 48 -> 64 * 24 * 48 
-            nn.BatchNorm2d(64), #  64 * 24 * 48 
+            nn.Conv2d(16, 32, kernel_size=3, padding=1), # 32 * 24 * 48 -> 64 * 24 * 48 
+            nn.BatchNorm2d(32), #  64 * 24 * 48 
             nn.ReLU(), #  64 * 24 * 48 
             nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 64 * 12 * 24
         self.layer4  = nn.Sequential(
+            nn.Conv2d(32, 32, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(32), #  128 * 12 * 24 
+            nn.ReLU(), #  128 * 12 * 24 
+            # nn.MaxPool2d(2),
+            nn.Dropout(0.25))
+        self.layer5  = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(64), #  128 * 12 * 24 
+            nn.ReLU(), #  128 * 12 * 24 
+            nn.MaxPool2d(2),
+            nn.Dropout(0.25))      
+        self.layer6  = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(64), #  128 * 12 * 24 
+            nn.ReLU(), #  128 * 12 * 24 
+            # nn.MaxPool2d(2),
+            nn.Dropout(0.25))  
+        self.layer7  = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
             nn.BatchNorm2d(128), #  128 * 12 * 24 
             nn.ReLU(), #  128 * 12 * 24 
             nn.MaxPool2d(2),
-            nn.Dropout(0.25))    
+            nn.Dropout(0.25)) 
+        self.layer8  = nn.Sequential(
+            nn.Conv2d(128, 128, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(128), #  128 * 12 * 24 
+            nn.ReLU(), #  128 * 12 * 24 
+            # nn.MaxPool2d(2),
+            nn.Dropout(0.25)) 
         self.linlayer = nn.Sequential(
             nn.Linear(128*6*12, 1024),
             nn.ReLU(),
             nn.Dropout(0.25),
-            nn.Linear(1024, 32),
+            nn.Linear(1024, 16),
             nn.ReLU(),
             nn.Dropout(0.5)
         )
@@ -75,6 +99,10 @@ class ConvNetEncoder(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+        out = self.layer5(out)
+        out = self.layer6(out)
+        out = self.layer7(out)
+        out = self.layer8(out)
         out = self.flatten(out)
         out = self.linlayer(out)
         return out
@@ -105,7 +133,7 @@ class ConvNetDecoder(nn.Module):
             nn.Dropout(0.25))  
 
         self.linlayer = nn.Sequential(
-            nn.Linear(32, 1024),
+            nn.Linear(16, 1024),
             nn.ReLU(),
             nn.Dropout(0.5),
             nn.Linear(1024, 128*6*12),
