@@ -71,18 +71,18 @@ class Decoder(nn.Module):
     
     def __init__(self):
         super(Decoder, self).__init__()
-        self.rb1 = ResBlock(24, 12, 3, 2, 0, 'decode') # 16 16 16
-        self.rb2 = ResBlock(12, 6, 3, 2, 1, 'decode') # 16 32 32
-        self.de_lin1 = nn.Linear(1024, 24*24*48)
+        self.rb1 = ResBlock(32, 32, 3, 2, 0, 'decode') # 16 16 16
+        self.rb2 = ResBlock(32, 16, 3, 2, 1, 'decode') # 16 32 32
+        self.de_lin1 = nn.Linear(1024, 32*24*48)
         self.de_lin2 = nn.Linear(16, 1024)
-        self.out_conv = nn.ConvTranspose2d(6, 1, 2, 1, 1) # 3 32 32
+        self.out_conv = nn.ConvTranspose2d(16, 1, 2, 1, 1) # 3 32 32
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
     def forward(self, inputs):
         out = self.relu(self.de_lin2(inputs))
         out = self.relu(self.de_lin1(out))
-        out = out.view(-1, 24, 24, 48)
+        out = out.view(-1, 32, 24, 48)
         out = self.rb1(out)
         out = self.rb2(out)
         out = self.out_conv(out)

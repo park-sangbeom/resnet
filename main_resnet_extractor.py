@@ -114,7 +114,7 @@ def main(args):
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
-            plt.suptitle("Resnet[Encoder: Resblock 3th][Decoder: Resblock 2th, Shallow]", fontsize=15)
+            plt.suptitle("Resnet[Encoder: Resblock 2th][Decoder: Resblock 2th]", fontsize=15)
             plt.savefig("data/resnet/{}/{}_eval{}.png".format(args.runname,args.runname,epoch+1))
             torch.save(ae.encoder.state_dict(), 'weights/{}/resnet_encoder{}steps.pth'.format(args.runname,epoch+1))
             torch.save(ae.decoder.state_dict(), 'weights/{}/resnet_decoder{}steps.pth'.format(args.runname,epoch+1))
@@ -131,7 +131,7 @@ if __name__=="__main__":
                       help="Use WANDB")
     args.add_argument('--pname', default= 'feature_extractor',type=str, 
                       help='wandb project name')
-    args.add_argument('--runname', default='resnet1101_4', type=str,
+    args.add_argument('--runname', default='resnet1101_5', type=str,
                       help="wandb runname")
     # DEVICE 
     args.add_argument("--device", default=device, type=str,
