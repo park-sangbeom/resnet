@@ -23,10 +23,11 @@ class ResBlock(nn.Module):
         if mode == 'encode':
             self.conv1 = nn.Conv2d(c_in, c_out, k, s, p)
             self.conv2 = nn.Conv2d(c_out, c_out, 3, 1, 1)
+            self.relu  = nn.LeakyReLU()
         elif mode == 'decode':
             self.conv1 = nn.ConvTranspose2d(c_in, c_out, k, s, p)
             self.conv2 = nn.ConvTranspose2d(c_out, c_out, 3, 1, 1)
-        self.relu = nn.ReLU()
+            self.relu = nn.ReLU()
         self.BN = nn.BatchNorm2d(c_out)
         self.resize = s > 1 or (s == 1 and p == 0) or c_out != c_in
         self.dropout = nn.Dropout(0.25)
@@ -51,8 +52,10 @@ class Encoder(nn.Module):
         self.rb1 = ResBlock(16, 16, 3, 2, 1, 'encode')
         self.rb2 = ResBlock(16, 32, 3, 2, 1, 'encode') 
         self.rb3 = ResBlock(32, 48, 3, 2, 1, 'encode') 
+        self.rb4 = ResBlock(48, 64, 3, 2, 1, 'encode') 
+
         self.flatten = nn.Flatten()
-        self.lin1 = nn.Linear(48*12*24, 1024)
+        self.lin1 = nn.Linear(64*6*12, 1024)
         self.lin2 = nn.Linear(1024, 16)
         self.relu = nn.ReLU()
 
@@ -61,6 +64,8 @@ class Encoder(nn.Module):
         out = self.rb1(init_conv)
         out = self.rb2(out)
         out = self.rb3(out)
+        out = self.rb4(out)
+
         out = self.flatten(out)
         out = self.relu(self.lin1(out))
         out = self.relu(self.lin2(out))
@@ -73,20 +78,19 @@ class Decoder(nn.Module):
     
     def __init__(self):
         super(Decoder, self).__init__()
-        self.rb1 = ResBlock(48, 32, 5, 2, 1, 'decode') # 16 16 16
-        self.rb2 = ResBlock(32, 16, 2, 2, 1, 'decode') # 16 32 32
-        self.rb3 = ResBlock(16, 16, 2, 2, 1, 'decode') # 16 32 32
-
-        self.de_lin1 = nn.Linear(1024, 48*12*24)
+        self.rb1 = ResBlock(24, 12, 5, 2, 1, 'decode') # 16 16 16
+        self.rb2 = ResBlock(12, 12, 3, 2, 1, 'decode') # 16 32 32
+        self.rb3 = ResBlock(12, 6, 3, 2, 1, 'decode') # 16 32 32
+        self.de_lin1 = nn.Linear(1024, 24*6*12)
         self.de_lin2 = nn.Linear(16, 1024)
-        self.out_conv = nn.ConvTranspose2d(16, 1, 3, 1, 0) # 3 32 32
+        self.out_conv = nn.ConvTranspose2d(6, 1, 2, 2, 1) # 3 32 32
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
     def forward(self, inputs):
         out = self.relu(self.de_lin2(inputs))
         out = self.relu(self.de_lin1(out))
-        out = out.view(-1, 48, 12, 24)
+        out = out.view(-1, 24, 6, 12)
         out = self.rb1(out)
         out = self.rb2(out)
         out = self.rb3(out)

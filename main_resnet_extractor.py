@@ -24,13 +24,13 @@ print(torchvision.__version__)
 
 param_names = ('init_lr', 'batch_size', 'weight_decay')
 parameters = OrderedDict(
-    run = [0.05, 256, 0.001],
+    run = [0.05, 512, 0.001],
 )
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Device: {}".format(device))
 
 m = RunManager()
-num_epochs = 500
+num_epochs = 100
 
 root_path = "/home/sangbeom/resnet/data/depth1014/"
 
@@ -90,26 +90,23 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
                 
                 val_images = val_images.detach().cpu().numpy()
                 val_preds = val_preds.detach().cpu().numpy()
-        if (epoch+1)%100==0 or (epoch+1)==1 or (epoch+1)==5 or (epoch+1)==num_epochs:
+        if (epoch+1)%10==0 or (epoch+1)==1 or (epoch+1)==5 or (epoch+1)==num_epochs:
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
                 val_images = val_images.reshape(-1, 1, 96, 192)
                 val_images = Variable(val_images.float().to(device))
                 val_preds, encoded = ae(val_images)
                 val_loss = F.mse_loss(val_preds, val_images)
-            # print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
-            #                                                                 i*hparams.batch_size,
-            #                                                                 round(loss.item(), 6),
-            #                                                                 round(val_loss.item(), 6)))
             fig, axs = plt.subplots(2,5, figsize=(15,4))
             val_images = val_images.detach().cpu().numpy()
             val_preds = val_preds.detach().cpu().numpy()
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
-            plt.savefig("data/resnet/resnet1030/resnet1030_eval{}.png".format(epoch+1))
-            torch.save(ae.encoder.state_dict(), 'weights/resnet1030/resnet_encoder{}steps.pth'.format(epoch+1))
-            torch.save(ae.decoder.state_dict(), 'weights/resnet1030/resnet_decoder{}steps.pth'.format(epoch+1))
+            plt.suptitle("Resnet:[Encoder: Resblock 4th][Decoder: Resblock 3th, Shallow]", fontsize=15)
+            plt.savefig("data/resnet/resnet1101/resnet1101_eval{}.png".format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/resnet1101/resnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/resnet1101/resnet_decoder{}steps.pth'.format(epoch+1))
 
     # m.end_run()
     print("Model has finished training.\n")
