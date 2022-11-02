@@ -23,7 +23,7 @@ print(torchvision.__version__)
 
 param_names = ('init_lr', 'batch_size', 'weight_decay')
 parameters = OrderedDict(
-    run = [1e-3, 256, 0.001],
+    run = [1e-3, 512, 0.001],
 )
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -104,11 +104,11 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             val_images = val_images.detach().cpu().numpy()
             val_preds = val_preds.detach().cpu().numpy()
             for i in range(5):
-                axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)), cmap=plt.get_cmap('gray'))
-                axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)), cmap=plt.get_cmap('gray'))
-            plt.savefig("data/convnet/convnet1031_eval{}.png".format(epoch+1))
-            torch.save(ae.encoder.state_dict(), 'weights/convnet1031/convnet_encoder{}steps.pth'.format(epoch+1))
-            torch.save(ae.decoder.state_dict(), 'weights/convnet1031/convnet_decoder{}steps.pth'.format(epoch+1))
+                axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
+                axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
+            plt.savefig("data/convnet/convnet1102_eval{}.png".format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/convnet1102/convnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/convnet1102/convnet_decoder{}steps.pth'.format(epoch+1))
 
     # m.end_run()
     print("Model has finished training.\n")

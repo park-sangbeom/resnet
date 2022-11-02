@@ -37,59 +37,59 @@ class ConvNetEncoder(nn.Module):
         super(ConvNetEncoder, self).__init__()
         
         self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=3, padding=1), #1 * 96 * 192 -> 16 * 96 * 192
-            nn.BatchNorm2d(16), #16 * 96 * 192
-            nn.ReLU(),                 #16 * 96 * 192
+            nn.Conv2d(1, 64, kernel_size=3, padding=1), #1 * 96 * 192 -> 16 * 96 * 192
+            nn.BatchNorm2d(64), #16 * 96 * 192
+            nn.LeakyReLU(),                 
             nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 16 * 48 * 96
         self.layer2  = nn.Sequential(
-            nn.Conv2d(16, 16, kernel_size=3, padding=1), # 16* 48 * 96 -> 32 * 48 * 96
-            nn.BatchNorm2d(16), #  32 * 48 * 96
+            nn.Conv2d(64, 64, kernel_size=3, padding=1), # 16* 48 * 96 -> 32 * 48 * 96
+            nn.BatchNorm2d(64), #  32 * 48 * 96
             nn.ReLU(), #  32 * 48 * 96
             # nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 32 * 24 * 48
         self.layer3  = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=3, padding=1), # 32 * 24 * 48 -> 64 * 24 * 48 
-            nn.BatchNorm2d(32), #  64 * 24 * 48 
-            nn.ReLU(), #  64 * 24 * 48 
+            nn.Conv2d(64, 128, kernel_size=3, padding=1), # 32 * 24 * 48 -> 64 * 24 * 48 
+            nn.BatchNorm2d(128), #  64 * 24 * 48 
+            nn.LeakyReLU(),                
             nn.MaxPool2d(2),
             nn.Dropout(0.25))       # 64 * 12 * 24
         self.layer4  = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
-            nn.BatchNorm2d(32), #  128 * 12 * 24 
-            nn.ReLU(), #  128 * 12 * 24 
+            nn.Conv2d(128, 128, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(128), #  128 * 12 * 24 
+            nn.LeakyReLU(),                 
             # nn.MaxPool2d(2),
             nn.Dropout(0.25))
         self.layer5  = nn.Sequential(
-            nn.Conv2d(32, 64, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
-            nn.BatchNorm2d(64), #  128 * 12 * 24 
-            nn.ReLU(), #  128 * 12 * 24 
+            nn.Conv2d(128, 256, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(256), #  128 * 12 * 24 
+            nn.LeakyReLU(),                 
             nn.MaxPool2d(2),
             nn.Dropout(0.25))      
         self.layer6  = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
-            nn.BatchNorm2d(64), #  128 * 12 * 24 
+            nn.Conv2d(256, 256, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(256), #  128 * 12 * 24 
             nn.ReLU(), #  128 * 12 * 24 
             # nn.MaxPool2d(2),
             nn.Dropout(0.25))  
         self.layer7  = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
-            nn.BatchNorm2d(128), #  128 * 12 * 24 
-            nn.ReLU(), #  128 * 12 * 24 
+            nn.Conv2d(256, 512, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(512), #  128 * 12 * 24 
+            nn.LeakyReLU(),                 
             nn.MaxPool2d(2),
             nn.Dropout(0.25)) 
         self.layer8  = nn.Sequential(
-            nn.Conv2d(128, 128, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
-            nn.BatchNorm2d(128), #  128 * 12 * 24 
-            nn.ReLU(), #  128 * 12 * 24 
+            nn.Conv2d(512, 512, kernel_size=3, padding=1), # 64 * 12 * 24 -> 128 * 12 * 24
+            nn.BatchNorm2d(512), #  128 * 12 * 24 
+            nn.LeakyReLU(),                 
             # nn.MaxPool2d(2),
             nn.Dropout(0.25)) 
         self.linlayer = nn.Sequential(
-            nn.Linear(128*6*12, 1024),
-            nn.ReLU(),
+            nn.Linear(512*6*12, 1024),
+            nn.LeakyReLU(),                 
             nn.Dropout(0.25),
             nn.Linear(1024, 16),
-            nn.ReLU(),
+            nn.LeakyReLU(),                 
             nn.Dropout(0.5)
         )
         self.flatten = nn.Flatten()
@@ -109,43 +109,68 @@ class ConvNetEncoder(nn.Module):
 
 class ConvNetDecoder(nn.Module):
     def __init__(self):
-        super(ConvNetDecoder, self).__init__()
-        
+        super(ConvNetDecoder, self).__init__()    
         self.layer1 = nn.Sequential(
+            nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=0), 
+            nn.BatchNorm2d(256),
+            nn.ReLU(),            
+            nn.Dropout(0.25))      
+        self.layer2  = nn.Sequential(
+            nn.ConvTranspose2d(256, 256, kernel_size=2, stride=1, padding=1), 
+            nn.BatchNorm2d(256), 
+            nn.ReLU(),
+            nn.Dropout(0.25))      
+        self.layer3  = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(128), 
+            nn.ReLU(),
+            nn.Dropout(0.25))       
+        self.layer4  = nn.Sequential(
+            nn.ConvTranspose2d(128, 128, kernel_size=2, stride=1, padding=0),
+            nn.BatchNorm2d(128), 
+            nn.ReLU(),
+            nn.Dropout(0.25))  
+        self.layer5 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=0), 
             nn.BatchNorm2d(64),
             nn.ReLU(),            
             nn.Dropout(0.25))      
-        self.layer2  = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1), 
-            nn.BatchNorm2d(32), 
+        self.layer6  = nn.Sequential(
+            nn.ConvTranspose2d(64, 64, kernel_size=2, stride=1, padding=1), 
+            nn.BatchNorm2d(64), 
             nn.ReLU(),
             nn.Dropout(0.25))      
-        self.layer3  = nn.Sequential(
-            nn.ConvTranspose2d(32, 16, kernel_size=2, stride=2, padding=1),
-            nn.BatchNorm2d(16), 
+        self.layer7  = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(32), 
             nn.ReLU(),
             nn.Dropout(0.25))       
-        self.layer4  = nn.Sequential(
-            nn.ConvTranspose2d(16, 1, kernel_size=2, stride=2, padding=0),
+        self.layer8  = nn.Sequential(
+            nn.ConvTranspose2d(32, 1, kernel_size=2, stride=1, padding=0),
             nn.BatchNorm2d(1), 
             nn.ReLU(),
             nn.Dropout(0.25))  
+        self.tanh = nn.Tanh() 
 
         self.linlayer = nn.Sequential(
             nn.Linear(16, 1024),
             nn.ReLU(),
             nn.Dropout(0.5),
-            nn.Linear(1024, 128*6*12),
+            nn.Linear(1024, 512*6*12),
             nn.ReLU(),
             nn.Dropout(0.25)
         )
         
     def forward(self, x):
         out = self.linlayer(x)
-        out = out.view(-1, 128, 6, 12)
+        out = out.view(-1, 512, 6, 12)
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+        out = self.layer5(out)
+        out = self.layer6(out)
+        out = self.layer7(out)
+        out = self.layer8(out)
+        out = self.tanh(out)
         return out
