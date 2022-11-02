@@ -98,12 +98,12 @@ def main(args):
                 val_preds  = ae(val_images)
                 val_loss = F.mse_loss(val_preds, val_images)
 
-                c_vector1= ae.encoder(np2torch(realimg1, device=args.device))
-                c_vector2= ae.encoder(np2torch(realimg2, device=args.device))
-                c_vector3= ae.encoder(np2torch(unityimg1.reshape(-1, 1, 96, 192), device=args.device))
-                c_vector4= ae.encoder(np2torch(unityimg2.reshape(-1, 1, 96, 192), device=args.device))
-            real_dev = torch.sum(torch.abs(c_vector1-c_vector2))
-            unity_dev = torch.sum(torch.abs(c_vector3-c_vector4))
+                c_vector1= torch2np(ae.encoder(np2torch(realimg1, device=args.device)))
+                c_vector2= torch2np(ae.encoder(np2torch(realimg2, device=args.device)))
+                c_vector3= torch2np(ae.encoder(np2torch(unityimg1.reshape(-1, 1, 96, 192), device=args.device)))
+                c_vector4= torch2np(ae.encoder(np2torch(unityimg2.reshape(-1, 1, 96, 192), device=args.device)))
+            real_dev = np.sum(np.abs(c_vector1-c_vector2))
+            unity_dev = np.sum(np.abs(c_vector3-c_vector4))
             if args.WANDB: 
                 wandb.log({"real deviation":real_dev,
                            "unity deviation":unity_dev}, step=epoch+1)  
