@@ -24,48 +24,30 @@ def main(args):
     print(feature_extractor.load_state_dict(pretrained_dict))
     feature_extractor.eval() 
     c_vector_lst1d = []
-    c_vector_lst2d = []
     json_path = "c_vector.json"
     json_path_whiten1d = "c_vector_whiten1d.json"    
-    json_path_whiten2d = "c_vector_whiten2d.json"    
 
     for idx, depth in enumerate(depth_dataset):
         print("Index: {}".format(idx+1))
         c_vector = torch2np(feature_extractor(np2torch(depth.reshape(-1, 1, 96, 192), device=args.device)))
-        c_vector_lst2d.append(c_vector)
         c_vector_lst1d.append(c_vector.reshape(-1))
-        c_vector_content = {"idx":idx+1,
-                            "c_vector2d":c_vector.tolist(),
-                            "c_vector1d":c_vector.reshape(-1).tolist()}
-        with open(json_path, "a") as f:
-            f.write(json.dumps(c_vector_content)+'\n')
 
     print("Feature extraction end.")
-    print("Total num: {}".format(len(c_vector_lst2d)))
+    print("Total num: {}".format(len(c_vector_lst1d)))
 
     c_vector_arr1d = np.array(c_vector_lst1d)
-    c_vector_arr2d = np.array(c_vector_lst2d)
-    np.save("c_vector_arr2d.npy",c_vector_arr2d)
-    np.save("c_vector_arr2d.npy",c_vector_arr1d)
+    np.save("c_vector_arr1d.npy",c_vector_arr1d)
 
     whitened1d, x_mean1d, x_std1d = whitening(c_vector_arr1d)
-    whitened2d, x_mean2d, x_std2d = whitening(c_vector_arr2d)
+    np.save("x_mean1d.npy", x_mean1d)
+    np.save("x_std1d.npy", x_std1d)
 
     whitened1d_content = {"whitened1d":whitened1d.tolist(),
                         "x_mean1d":x_mean1d.tolist(),
                         "x_std1d":x_std1d.tolist(),
                         "c_vector_arr1d":c_vector_arr1d.tolist()}
-
-    whitened2d_content = {"whitened2d":whitened2d.tolist(),
-                        "x_mean2d":x_mean2d.tolist(),
-                        "x_std2d":x_std2d.tolist(),
-                        "c_vector_arr2d":c_vector_arr2d.tolist()}
-
-
     with open(json_path_whiten1d, "a") as f:
         f.write(json.dumps(whitened1d_content)+'\n')
-    with open(json_path_whiten2d, "a") as f:
-        f.write(json.dumps(whitened2d_content)+'\n')
     print("End.")
 
 

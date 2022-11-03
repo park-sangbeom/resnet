@@ -110,7 +110,7 @@ class Autoencoder(nn.Module):
     def forward(self, inputs):
         encoded = self.encoder(inputs)
         decoded = self.decoder(encoded)
-        return decoded ,encoded
+        return decoded 
 
 if __name__ == "__main__":
     autoencoder = Autoencoder()

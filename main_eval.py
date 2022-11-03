@@ -15,7 +15,7 @@ sys.path.append("..")
 from model.utils import torch2np, np2torch, model_freeze
 from model.utils_projection import realworld_ortho_proejction, unity_ortho_projection
 # from model.convnet_for_extractor import Autoencoder
-from model.resnet_for_extractor1014 import Encoder
+from model.resnet_for_extractor import Encoder
 
 def main_inference(args):
     print("Start Evaluation: {}".format(args.version))
@@ -34,7 +34,7 @@ def main_inference(args):
     print("Feature Extractor Weight: {} Load.".format(args.LOADWEIGHT))	
 
     with torch.no_grad():
-        image = np.load('./data/realworld/1025_test10_norm.npy')
+        image = np.load('./data/realworld/1025_test11_norm.npy')
         image = realworld_ortho_proejction(image)
         image = np2torch(image, device= args.device)
         image = image.reshape(-1, 1, image.shape[1], image.shape[0]) # Image shape [Width x Height] # CNN [-1 Channel Height Width]
@@ -46,7 +46,7 @@ def main_inference(args):
             print("Offset:", np.abs(temp-c_torch1))
             temp = c_torch1 
 
-        image2 = np.load('./data/realworld/1025_test12_norm.npy')
+        image2 = np.load('./data/realworld/1025_test10_norm.npy')
         image2 = realworld_ortho_proejction(image2)
         image2 = np2torch(image2, device= args.device)
         image2 = image2.reshape(-1, 1, image2.shape[1], image2.shape[0]) # Image shape [Width x Height] # CNN [-1 Channel Height Width]
@@ -73,9 +73,9 @@ if __name__=="__main__":
     # LOAD WEIGHTS
     # args.add_argument('--LOADWEIGHT', default='./weights/convnet/convnet1031/convnet_encoder700steps.pth', type=str,
     #                   help="ResNet weight path")
-    args.add_argument('--version', default='1014', type=str,
+    args.add_argument('--version', default='1103', type=str,
                       help="ResNet weight path")
-    args.add_argument('--LOADWEIGHT', default='./weights/resnet1014/resnet_encoder299steps.pth', type=str,
+    args.add_argument('--LOADWEIGHT', default='./weights/resnet1103/resnet_encoder300steps.pth', type=str,
                       help="ResNet weight path")
     args.add_argument('--imagepath', default='./demo/data/real_world/1025_test12_norm.npy', type=str,
                       help="Image path")
