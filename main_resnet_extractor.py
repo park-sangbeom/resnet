@@ -47,7 +47,7 @@ def main(args):
 
     # Define optimizer
     optimizer = optim.SGD(ae.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.01)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=60, gamma=0.1) # 30, 0.01
     # Setup run instance
     print('Now training model with hyperparameters: init_lr={0}, batch_size={1}, weight_decay={2}'
         .format(args.lr, args.batch_size, args.weight_decay))
@@ -55,7 +55,7 @@ def main(args):
     # Start training loop
     for epoch in range(args.max_epochs):
         total_loss = 0
-        ae.train()
+        # ae.train()
 
         # Train the model
         for i, batch in enumerate(train_loader):
@@ -90,7 +90,7 @@ def main(args):
         scheduler.step()    
         # Evaluation 
         if (epoch+1)%10==0 or (epoch+1)==1 or (epoch+1)==5 or (epoch+1)==args.max_epochs:
-            ae.eval()
+            # ae.eval()
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
                 val_images = val_images.reshape(-1, 1, 96, 192)
@@ -114,7 +114,7 @@ def main(args):
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
-            plt.suptitle("Resnet[Encoder: Resblock 2th][Decoder: Resblock 2th]", fontsize=15)
+            plt.suptitle("Resnet[Encoder: Resblock 3th, ReLU][Decoder: Resblock 3th]", fontsize=15)
             plt.savefig("data/resnet/{}/{}_eval{}.png".format(args.runname,args.runname,epoch+1))
             torch.save(ae.encoder.state_dict(), 'weights/{}/resnet_encoder{}steps.pth'.format(args.runname,epoch+1))
             torch.save(ae.decoder.state_dict(), 'weights/{}/resnet_decoder{}steps.pth'.format(args.runname,epoch+1))
@@ -131,7 +131,7 @@ if __name__=="__main__":
                       help="Use WANDB")
     args.add_argument('--pname', default= 'feature_extractor',type=str, 
                       help='wandb project name')
-    args.add_argument('--runname', default='resnet1101_5', type=str,
+    args.add_argument('--runname', default='resnet1030', type=str,
                       help="wandb runname")
     # DEVICE 
     args.add_argument("--device", default=device, type=str,
@@ -139,11 +139,11 @@ if __name__=="__main__":
     # PARAMETERS 
     args.add_argument('--max_epochs', default= 300, type=int,
                       help='Total epochs for training') 
-    args.add_argument('--lr', default= 0.1, type=float,
+    args.add_argument('--lr', default= 0.05, type=float, #0.1
                       help='learning rate')
     args.add_argument('--batch_size', default= 256, type=float,
                       help='batch size')
-    args.add_argument('--weight_decay', default= 0.0001, type=float,
+    args.add_argument('--weight_decay', default= 0.001, type=float, #0.0001
                       help='weight_decay')
     args = args.parse_args()
     main(args)

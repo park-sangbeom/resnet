@@ -8,7 +8,7 @@ log/
 outputs
 *.pyc
 # Byte-compiled / optimized / DLL files
-/model/__pycache__/
+# /model/__pycache__/
 # *.py[cod]
 # *$py.class
 # C extensions

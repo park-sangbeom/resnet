@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt 
 import sys
 sys.path.append('..')
-print("Done.")
 
 class DepthDatasetLoader(Dataset):
     def __init__(self, root_path="/home/sangbeom/resnet/data/depth1014/", 

@@ -15,6 +15,36 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 from IPython.display import display, clear_output
 
+def whitening(x=np.random.rand(100,2)):
+    """
+        Whitening
+    """
+    if len(x.shape) == 1:
+        x_mean  = np.mean(x,axis=None)
+        x_std   = np.std(x,axis=None)
+    else:
+        x_mean  = np.mean(x,axis=0)
+        x_std   = np.std(x,axis=0)
+    return (x-x_mean)/x_std, x_mean, x_std
+
+def whitening_torch(x=np.random.rand(100,2)):
+    """
+        Whitening
+    """
+    if len(x.shape) == 1:
+        x_mean  = torch.mean(x)
+        x_std   = torch.std(x)
+    else:
+        x_mean  = torch.mean(x,axis=0)
+        x_std   = torch.std(x,axis=0)
+    return (x-x_mean)/x_std, x_mean, x_std
+
+def model_freeze(model):
+    for name, child in model.named_children():
+        for param in child.parameters():
+            param.requires_grad = False
+        model_freeze(child)
+        
 def torch2np(x_torch):
     if x_torch is None:
         x_np = None
