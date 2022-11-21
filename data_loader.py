@@ -10,8 +10,8 @@ import sys
 sys.path.append('..')
 
 class DepthDatasetLoader(Dataset):
-    def __init__(self, root_path="/home/sangbeom/resnet/data/depth1014/", 
-                       json_name="depth1014.json",
+    def __init__(self, root_path="/home/sangbeom/resnet/data/depth1116_new/", 
+                       json_name="depth1116_new_npy.json",
                        transform=None):
         self.root_path = root_path 
         self.json_name = json_name 

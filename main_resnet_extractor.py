@@ -21,17 +21,17 @@ from model.resnet_for_extractor import Autoencoder
 from model.utils import torch2np, np2torch, get_runname
 
 def main(args):
-    unityimg1 = np.load('./data/depth1014/depth1_1.npy')
-    unityimg2 = np.load('./data/depth1014/depth1_2.npy')
-    realimg1 = np.load('./data/realworld/1025_test11_norm_ortho.npy')
-    realimg2 = np.load('./data/realworld/1025_test12_norm_ortho.npy')
+    unityimg1 = np.load('./data/depth1116_new/depth1_1.npy')
+    unityimg2 = np.load('./data/depth1116_new/depth1_2.npy')
+    realimg1 = np.load('./data/depth1116_new/depth10_2.npy')
+    realimg2 = np.load('./data/depth1116_new/depth10_100.npy')
 
     runname = get_runname() if args.runname=='None' else args.runname
     if args.WANDB:
         wandb.init(project = args.pname)
         wandb.run.name = runname  
 
-    root_path = "/home/sangbeom/resnet/data/depth1014/"
+    root_path = "/home/sangbeom/resnet/data/depth1116_new/"
 
     depth_dataset = DepthDatasetLoader(root_path=root_path)
     train_set, val_set = train_val_split(depth_dataset, 0.1)
@@ -42,8 +42,6 @@ def main(args):
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader   = DataLoader(val_set, batch_size=args.batch_size, shuffle=True)
     test_loader  = DataLoader(val_set, batch_size=10, shuffle=False)
-    test_images  = next(iter(test_loader))
-    test_images  = next(iter(val_loader))
 
     # Define optimizer
     optimizer = optim.SGD(ae.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
@@ -96,16 +94,15 @@ def main(args):
                 val_images = val_images.reshape(-1, 1, 96, 192)
                 val_images = np2torch(val_images, device=args.device)
                 val_preds  = ae(val_images)
-                val_loss = F.mse_loss(val_preds, val_images)
 
-                c_vector1= torch2np(ae.encoder(np2torch(realimg1, device=args.device)))
-                c_vector2= torch2np(ae.encoder(np2torch(realimg2, device=args.device)))
+                c_vector1= torch2np(ae.encoder(np2torch(realimg1.reshape(-1, 1, 96, 192), device=args.device)))
+                c_vector2= torch2np(ae.encoder(np2torch(realimg2.reshape(-1, 1, 96, 192), device=args.device)))
                 c_vector3= torch2np(ae.encoder(np2torch(unityimg1.reshape(-1, 1, 96, 192), device=args.device)))
                 c_vector4= torch2np(ae.encoder(np2torch(unityimg2.reshape(-1, 1, 96, 192), device=args.device)))
             real_dev = np.sum(np.abs(c_vector1-c_vector2))
             unity_dev = np.sum(np.abs(c_vector3-c_vector4))
             if args.WANDB: 
-                wandb.log({"real deviation":real_dev,
+                wandb.log({"unity deviation2":real_dev,
                            "unity deviation":unity_dev}, step=epoch+1)  
 
             fig, axs = plt.subplots(2,5, figsize=(15,4))
@@ -114,7 +111,7 @@ def main(args):
             for i in range(5):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
-            plt.suptitle("Resnet[Encoder: Resblock 3th, LeakyReLU][Decoder: Resblock 2th, Shallow]", fontsize=15)
+            plt.suptitle("Resnet[Encoder: Resblock 3th, ReLU][Decoder: Resblock 3th, Shallow]", fontsize=15)
             plt.savefig("data/resnet/{}/{}_eval{}.png".format(args.runname,args.runname,epoch+1))
             torch.save(ae.encoder.state_dict(), 'weights/{}/resnet_encoder{}steps.pth'.format(args.runname,epoch+1))
             torch.save(ae.decoder.state_dict(), 'weights/{}/resnet_decoder{}steps.pth'.format(args.runname,epoch+1))
@@ -131,7 +128,7 @@ if __name__=="__main__":
                       help="Use WANDB")
     args.add_argument('--pname', default= 'feature_extractor',type=str, 
                       help='wandb project name')
-    args.add_argument('--runname', default='resnet1103', type=str,
+    args.add_argument('--runname', default='resnet1116_new_bigger_32', type=str,
                       help="wandb runname")
     # DEVICE 
     args.add_argument("--device", default=device, type=str,

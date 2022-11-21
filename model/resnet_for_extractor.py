@@ -22,7 +22,7 @@ class ResBlock(nn.Module):
         if mode == 'encode':
             self.conv1 = nn.Conv2d(c_in, c_out, k, s, p)
             self.conv2 = nn.Conv2d(c_out, c_out, 3, 1, 1)
-            self.relu  = nn.LeakyReLU()
+            self.relu  = nn.ReLU()
         elif mode == 'decode':
             self.conv1 = nn.ConvTranspose2d(c_in, c_out, k, s, p)
             self.conv2 = nn.ConvTranspose2d(c_out, c_out, 3, 1, 1)
@@ -32,12 +32,12 @@ class ResBlock(nn.Module):
         self.dropout = nn.Dropout(0.25)
 
     def forward(self, x):
-        conv1 = self.BN(self.conv1(x))
-        relu = self.dropout(self.relu(conv1))
-        conv2 = self.BN(self.conv2(relu))
+        conv1 = self.conv1(x)
+        relu = self.relu(conv1)
+        conv2 = self.conv2(relu)
         if self.resize:
-            x = self.BN(self.conv1(x))
-        return self.dropout(self.relu(x + conv2))
+            x = self.conv1(x)
+        return self.relu(x + conv2)
 
 class Encoder(nn.Module):
     """
@@ -48,13 +48,13 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.init_conv = nn.Conv2d(1, 16, 3, 1, 1) 
         self.BN = nn.BatchNorm2d(16)
-        self.rb1 = ResBlock(16, 32, 3, 2, 1, 'encode')
-        self.rb2 = ResBlock(32, 32, 3, 2, 1, 'encode') 
-        self.rb3 = ResBlock(32, 48, 3, 2, 1, 'encode') 
+        self.rb1 = ResBlock(16, 64, 3, 2, 1, 'encode')
+        self.rb2 = ResBlock(64, 128, 3, 2, 1, 'encode') 
+        self.rb3 = ResBlock(128, 256, 3, 2, 1, 'encode') 
         self.flatten = nn.Flatten()
-        self.lin1 = nn.Linear(48*12*24, 1024)
-        self.lin2 = nn.Linear(1024, 16)
-        self.relu = nn.LeakyReLU()
+        self.lin1 = nn.Linear(256*12*24, 512)
+        self.lin2 = nn.Linear(512, 32)
+        self.relu = nn.ReLU()
 
     def forward(self, inputs):
         init_conv = self.relu(self.BN(self.init_conv(inputs)))
@@ -73,20 +73,22 @@ class Decoder(nn.Module):
     
     def __init__(self):
         super(Decoder, self).__init__()
-        self.rb1 = ResBlock(24, 12, 3, 2, 0, 'decode') # 16 16 16
-        self.rb2 = ResBlock(12, 6, 3, 2, 1, 'decode') # 16 32 32
-        self.de_lin1 = nn.Linear(1024, 24*12*24)
-        self.de_lin2 = nn.Linear(16, 1024)
-        self.out_conv = nn.ConvTranspose2d(6, 1, 2, 2, 1) # 3 32 32
+        self.rb1 = ResBlock(256, 128, 3, 2, 0, 'decode')
+        self.rb2 = ResBlock(128, 64, 3, 2, 1, 'decode')
+        self.rb3 = ResBlock(64, 16, 3, 2, 1, 'decode') # 16 32 32
+        self.de_lin1 = nn.Linear(512, 256*12*24)
+        self.de_lin2 = nn.Linear(32, 512)
+        self.out_conv = nn.ConvTranspose2d(16, 1, 2, 1, 1) 
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
 
     def forward(self, inputs):
         out = self.relu(self.de_lin2(inputs))
         out = self.relu(self.de_lin1(out))
-        out = out.view(-1, 24, 12, 24)
+        out = out.view(-1, 256, 12, 24)
         out = self.rb1(out)
         out = self.rb2(out)
+        out = self.rb3(out)
         out = self.out_conv(out)
         out = self.tanh(out)
         return out
@@ -110,8 +112,4 @@ class Autoencoder(nn.Module):
     def forward(self, inputs):
         encoded = self.encoder(inputs)
         decoded = self.decoder(encoded)
-        return decoded 
-
-if __name__ == "__main__":
-    autoencoder = Autoencoder()
-    print(autoencoder.num_params)
+        return decoded
