@@ -13,7 +13,7 @@ from torchvision.transforms import transforms
 
 from utils import *
 from data_loader import DepthDatasetLoader
-from model.convnet_for_extractor import Autoencoder
+from model.convnet import Autoencoder
 
 torch.set_printoptions(linewidth=120)
 torch.set_grad_enabled(True)
@@ -32,7 +32,7 @@ print("Device: {}".format(device))
 m = RunManager()
 num_epochs = 1000
 
-root_path = "/home/sangbeom/resnet/data/depth1014/"
+root_path = "/home/sangbeom/resnet/data/depth1116_new/"
 
 depth_dataset = DepthDatasetLoader(root_path=root_path)
 train_set, val_set = train_val_split(depth_dataset, 0.1)
@@ -67,7 +67,7 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             optimizer.zero_grad()
             
             # Calculating the loss
-            preds,_ = ae(train_images)
+            preds = ae(train_images)
             loss = F.mse_loss(preds, train_images)
             # Backpropagate
             loss.backward()
@@ -75,31 +75,30 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
             # Update the weights
             optimizer.step()
             
-            if i % 100 == 0:
-                with torch.no_grad():
-                    val_images  = next(iter(val_loader))
-                    val_images = val_images.reshape(-1, 1, 96, 192)
-                    val_images = Variable(val_images.float().to(device))
-                    val_preds,_ = ae(val_images)
-                    val_loss = F.mse_loss(val_preds, val_images)
-                print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
-                                                                               i*hparams.batch_size,
-                                                                               round(loss.item(), 6),
-                                                                               round(val_loss.item(), 6)))
+            # if i % 100 == 0:
+            #     with torch.no_grad():
+            #         val_images  = next(iter(val_loader))
+            #         val_images = val_images.reshape(-1, 1, 96, 192)
+            #         val_images = Variable(val_images.float().to(device))
+            #         val_preds,_ = ae(val_images)
+            #         val_loss = F.mse_loss(val_preds, val_images)
+            #     print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
+            #                                                                    i*hparams.batch_size,
+            #                                                                    round(loss.item(), 6),
+            #                                                                    round(val_loss.item(), 6)))
                 
-                val_images = val_images.detach().cpu().numpy()
-                val_preds = val_preds.detach().cpu().numpy()
-        if (epoch+1)%100==0 or (epoch+1)==num_epochs:
+            #     val_images = val_images.detach().cpu().numpy()
+            #     val_preds = val_preds.detach().cpu().numpy()
+        if (epoch+1)%2==0 or (epoch+1)==num_epochs:
             with torch.no_grad():
                 val_images  = next(iter(val_loader))
                 val_images = val_images.reshape(-1, 1, 96, 192)
                 val_images = Variable(val_images.float().to(device))
-                val_preds, _ = ae(val_images)
+                val_preds = ae(val_images)
                 val_loss = F.mse_loss(val_preds, val_images)
-            # print('Epoch {0}, iteration {1}: train loss {2}, val loss {3}'.format(epoch+1,
-            #                                                                 i*hparams.batch_size,
-            #                                                                 round(loss.item(), 6),
-            #                                                                 round(val_loss.item(), 6)))
+            print('Epoch {0}, train loss {1}, val loss {2}'.format(epoch+1,
+                                                            round(loss.item(), 6),
+                                                            round(val_loss.item(), 6)))
             fig, axs = plt.subplots(2,5, figsize=(15,4))
             val_images = val_images.detach().cpu().numpy()
             val_preds = val_preds.detach().cpu().numpy()
@@ -107,8 +106,8 @@ for hparams in RunBuilder.get_runs_from_params(param_names, parameters):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
             plt.savefig("data/convnet/convnet1102_eval{}.png".format(epoch+1))
-            torch.save(ae.encoder.state_dict(), 'weights/convnet1102/convnet_encoder{}steps.pth'.format(epoch+1))
-            torch.save(ae.decoder.state_dict(), 'weights/convnet1102/convnet_decoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.encoder.state_dict(), 'weights/convnet1121/convnet_encoder{}steps.pth'.format(epoch+1))
+            torch.save(ae.decoder.state_dict(), 'weights/convnet1121/convnet_decoder{}steps.pth'.format(epoch+1))
 
     # m.end_run()
     print("Model has finished training.\n")

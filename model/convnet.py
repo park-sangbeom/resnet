@@ -4,13 +4,15 @@ from torch.nn import functional as F
 from torch.utils.data import Dataset, DataLoader 
 from torchvision import transforms, datasets, utils
 from torch.autograd import Variable
+import torch.nn as nn 
 import matplotlib.pyplot as plt 
 import wandb 
 import numpy as np
 
-class CAE(nn.Module):
+class Autoencoder(nn.Module):
     def __init__(self, input_dim=1):
-        super(CAE, self).__init__()
+        super(Autoencoder, self).__init__()
+        self.tanh = nn.Tanh()
         self.encoder = nn.Sequential(
             # First Layer 
             nn.Conv2d(in_channels=input_dim, 
@@ -68,4 +70,4 @@ class CAE(nn.Module):
     def forward(self, x): 
         encode_out = self.encoder(x)
         decode_out = self.decoder(encode_out)
-        return decode_out 
+        return self.tanh(decode_out) 
