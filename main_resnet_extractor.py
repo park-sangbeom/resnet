@@ -128,7 +128,7 @@ if __name__=="__main__":
                       help="Use WANDB")
     args.add_argument('--pname', default= 'feature_extractor',type=str, 
                       help='wandb project name')
-    args.add_argument('--runname', default='resnet1116_new_bigger_32', type=str,
+    args.add_argument('--runname', default='resnet1116_new_bigger_10', type=str,
                       help="wandb runname")
     # DEVICE 
     args.add_argument("--device", default=device, type=str,

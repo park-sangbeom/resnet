@@ -32,11 +32,11 @@ class ResBlock(nn.Module):
         self.dropout = nn.Dropout(0.25)
 
     def forward(self, x):
-        conv1 = self.conv1(x)
+        conv1 = self.BN(self.conv1(x))
         relu = self.relu(conv1)
-        conv2 = self.conv2(relu)
+        conv2 = self.BN(self.conv2(relu))
         if self.resize:
-            x = self.conv1(x)
+            x = self.BN(self.conv1(x))
         return self.relu(x + conv2)
 
 class Encoder(nn.Module):
@@ -53,7 +53,7 @@ class Encoder(nn.Module):
         self.rb3 = ResBlock(128, 256, 3, 2, 1, 'encode') 
         self.flatten = nn.Flatten()
         self.lin1 = nn.Linear(256*12*24, 512)
-        self.lin2 = nn.Linear(512, 32)
+        self.lin2 = nn.Linear(512, 10)
         self.relu = nn.ReLU()
 
     def forward(self, inputs):
@@ -77,7 +77,7 @@ class Decoder(nn.Module):
         self.rb2 = ResBlock(128, 64, 3, 2, 1, 'decode')
         self.rb3 = ResBlock(64, 16, 3, 2, 1, 'decode') # 16 32 32
         self.de_lin1 = nn.Linear(512, 256*12*24)
-        self.de_lin2 = nn.Linear(32, 512)
+        self.de_lin2 = nn.Linear(10, 512)
         self.out_conv = nn.ConvTranspose2d(16, 1, 2, 1, 1) 
         self.tanh = nn.Tanh()
         self.relu = nn.ReLU()
