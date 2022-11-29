@@ -28,7 +28,8 @@ class UnityDepthDatasetLoader(Dataset):
         
     def __getitem__(self, idx):
         image_path = self.image_lst[idx]
-        dir = self.root_path+image_path["file_path"]
+        dir = image_path["file_path"]
+        # dir = self.root_path+image_path["file_path"]
         #label = torch.from_numpy(np.array(float(image_path["label"])-1.0).astype(np.int64))
         #image = read_image(dir)
         image = np.load(dir)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import wandb 
 import json
 import argparse 
-from pathlib import Path
+import os 
 import torch 
 import torch.nn as nn 
 import torch.optim as optim 
@@ -26,17 +26,17 @@ def main(args):
         wandb.init(project = args.pname)
         wandb.run.name = args.runname
     
-    SAVE_WEIGHT_PATH = "../data/weights/"+args.runname
-    SAVE_IMAGE_PATH  = "../data/eval/"+args.runname
-    SAVE_args_PATH   = "../data/args/"+args.runname
+    SAVE_WEIGHT_PATH = "./weights/"+args.runname
+    SAVE_IMAGE_PATH  = "./data/eval/"+args.runname
+    SAVE_args_PATH   = "./data/args/"+args.runname
 
-    Path.mkdir(SAVE_WEIGHT_PATH,exist_ok=True)
-    Path.mkdir(SAVE_IMAGE_PATH,exist_ok=True)
-    Path.mkdir(SAVE_args_PATH,exist_ok=True)
+    os.makedirs(SAVE_WEIGHT_PATH,exist_ok=True)
+    os.makedirs(SAVE_IMAGE_PATH,exist_ok=True)
+    os.makedirs(SAVE_args_PATH,exist_ok=True)
 
     # Save args
-    args_file_name = str(SAVE_args_PATH/"args.json")
-    args_file = json.dumps(vars(args))
+    args_file_name =SAVE_args_PATH+"/args.json"
+    args_file = json.dumps(str(vars(args)), default=str)
     with open(args_file_name,"w") as args_json: args_json.write(args_file)
     
     # Load Dataset
@@ -44,20 +44,22 @@ def main(args):
                                     json_name=args.json_path)
     
     dataset_size = len(dataset)
-    train_size   = int(dataset_size*0.8)
+    train_size   = int(dataset_size*0.9)
     val_size     = int(dataset_size*0.1)
-    test_size    = dataset_size--train_size-val_size
+    # test_size    = dataset_size--train_size-val_size
     # Split dataset 
-    train_set, val_set, test_set = random_split(dataset, [train_size, val_size, test_size])
+    # train_set, val_set, test_set = random_split(dataset, [train_size, val_size, test_size])
+    train_set, val_set = random_split(dataset, [train_size, val_size])
+
     # Instantiate a network model
     model = Autoencoder().to(args.device)
     # Construct a DataLoader object with training data
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader   = DataLoader(val_set, batch_size=args.batch_size, shuffle=True)
-    test_loader  = DataLoader(test_set, batch_size=10, shuffle=False)
+    # test_loader  = DataLoader(test_set, batch_size=10, shuffle=False)
 
     # Define Optimizer 
-    optimizer = optim.SGD(ae.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.01) # 30, 0.01
     
     # Evaluation Image 
@@ -112,7 +114,7 @@ def main(args):
                 axs[0][i].matshow(np.reshape(val_images[i, :], (96,192)))
                 axs[1][i].matshow(np.reshape(val_preds[i, :], (96,192)))
             plt.suptitle("Resnet[Encoder: Resblock 3th, ReLU][Decoder: Resblock 3th, Shallow]", fontsize=15)
-            plt.savefig("data/resnet/{}/{}_eval{}.png".format(args.runname,args.runname,epoch+1))
+            plt.savefig("data/eval/{}/{}_eval{}.png".format(args.runname,args.runname,epoch+1))
             torch.save(model.encoder.state_dict(), 'weights/{}/resnet_encoder{}steps.pth'.format(args.runname,epoch+1))
             # torch.save(model.decoder.state_dict(), 'weights/{}/resnet_decoder{}steps.pth'.format(args.runname,epoch+1))
 
@@ -125,15 +127,15 @@ if __name__=="__main__":
     print("Device: {}".format(device))
     args   = argparse.ArgumentParser(description= "Parse for ResNet")
     # LOG 
-    args.add_argument("--WANDB", default = True, action="store_true",
+    args.add_argument("--WANDB", default = False, action="store_true",
                       help="Use WANDB")
     args.add_argument('--pname', default= 'feature_extractor',type=str, 
                       help='wandb project name')
-    args.add_argument('--runname', default='resnet1116_new_bigger_10', type=str,
+    args.add_argument('--runname', default='resnet1129', type=str,
                       help="wandb runname")
-    args.add_argument('--data_path', default='resnet1116_new_bigger_10', type=str,
+    args.add_argument('--data_path', default='depth1129', type=str,
                       help="wandb runname")
-    args.add_argument('--json_path', default='resnet1116_new_bigger_10', type=str,
+    args.add_argument('--json_path', default='/home/sangbeom/resnet/data/depth1129.json', type=str,
                       help="wandb runname")
     # DEVICE 
     args.add_argument("--device", default=device, type=str,
@@ -147,5 +149,7 @@ if __name__=="__main__":
                       help='batch size')
     args.add_argument('--weight_decay', default= 0.0001, type=float, #0.0001
                       help='weight_decay')
+    args.add_argument('--random_seed', default= 42, type=int,
+                      help='random seed') 
     args = args.parse_args()
     main(args)
